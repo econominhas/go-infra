@@ -15,17 +15,33 @@ type Dns struct {
 	StackId string
 }
 
-func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDnsInput) {
-	// Hosted Zone
-
-	dnsId := utils.GenId(&utils.GenIdInput{
+func (dps *Dns) getMainId() string {
+	return utils.GenId(&utils.GenIdInput{
 		Id:        dps.StackId,
-		Name:      i.Name,
+		Name:      dps.StackId,
 		Type:      "dns",
 		OmitStage: true, // Dns should never have stage
 	})
+}
+
+func (dps *Dns) GetMainRef() string {
+	dnsId := dps.getMainId()
+	return cloudformation.ImportValue(dnsId)
+}
+
+func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDnsInput) {
+	// Hosted Zone
+
+	dnsId := dps.getMainId()
 	t.Resources[dnsId] = &route53.HostedZone{
 		Name: &i.DomainName,
+	}
+
+	t.Outputs[dnsId+"-output"] = cloudformation.Output{
+		Value: cloudformation.Ref(dnsId),
+		Export: &cloudformation.Export{
+			Name: dnsId,
+		},
 	}
 
 	// Certificate
@@ -35,7 +51,7 @@ func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDn
 
 	certId := utils.GenId(&utils.GenIdInput{
 		Id:        dps.StackId,
-		Name:      i.Name,
+		Name:      dps.StackId,
 		Type:      "cert",
 		OmitStage: true, // Dns should never have stage
 	})

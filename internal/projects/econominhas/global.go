@@ -1,5 +1,13 @@
 package econominhas
 
+// ---------------------------------
+//
+//  DO NOT USE THE GLOBAL STACK AS
+//  REFERENCE TO CREATE OTHER
+//  NON-GLOBAL STACKS!!!!
+//
+// ---------------------------------
+
 import (
 	"github.com/awslabs/goformation/v7/cloudformation"
 
@@ -7,8 +15,17 @@ import (
 	"github.com/econominhas/infra/internal/clouds/providers"
 )
 
+// The project ID should always be declared
+// at the global stack so it can be used
+// by the other stacks
+const PROJECT_ID = "econominhas"
+
+// The global stack is responsible for creating
+// every resource that is not used by a product
+// in specific, but can be used by all/multiple
+// products
 func Global() ([]byte, error) {
-	stackId := "econominhas"
+	stackId := PROJECT_ID
 
 	template := cloudformation.NewTemplate()
 
@@ -19,7 +36,6 @@ func Global() ([]byte, error) {
 	dns := cloud.Dns()
 
 	dns.CreateMain(template, &providers.CreateMainDnsInput{
-		Name:       stackId,
 		DomainName: "econominhas.com.br",
 	})
 

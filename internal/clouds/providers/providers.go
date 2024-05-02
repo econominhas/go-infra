@@ -17,10 +17,22 @@ type Vpc interface {
 // Dns
 
 type CreateMainDnsInput struct {
-	Name       string
 	DomainName string
 }
 
 type Dns interface {
+	GetMainRef() string
 	CreateMain(t *cloudformation.Template, i *CreateMainDnsInput)
+}
+
+// Website
+
+type CreateStaticWebsiteInput struct {
+	Name          string
+	DnsRef        string
+	SubDomainName string
+}
+
+type Website interface {
+	CreateStatic(t *cloudformation.Template, i *CreateStaticWebsiteInput)
 }

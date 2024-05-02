@@ -7,4 +7,5 @@ import "github.com/econominhas/infra/internal/clouds/providers"
 type Cloud interface {
 	Vpc() providers.Vpc
 	Dns() providers.Dns
+	Website() providers.Website
 }
