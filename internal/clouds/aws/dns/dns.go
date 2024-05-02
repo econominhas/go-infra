@@ -37,7 +37,7 @@ func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDn
 		Name: &i.DomainName,
 	}
 
-	t.Outputs[dnsId+"-output"] = cloudformation.Output{
+	t.Outputs[dnsId+"Output"] = cloudformation.Output{
 		Value: cloudformation.Ref(dnsId),
 		Export: &cloudformation.Export{
 			Name: dnsId,

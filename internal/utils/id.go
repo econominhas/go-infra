@@ -15,11 +15,11 @@ type GenIdInput struct {
 func GenId(i *GenIdInput) string {
 	if i.OmitStage {
 		return ToPascal(
-			strings.Join([]string{i.Id, os.Getenv("ENV"), i.Name, i.Type}, "-"),
+			strings.Join([]string{i.Id, i.Name, i.Type}, "-"),
 		)
 	}
 
 	return ToPascal(
-		strings.Join([]string{i.Id, i.Name, i.Type}, "-"),
+		strings.Join([]string{i.Id, os.Getenv("ENV"), i.Name, i.Type}, "-"),
 	)
 }
