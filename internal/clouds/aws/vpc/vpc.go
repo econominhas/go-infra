@@ -7,16 +7,12 @@ package vpc
 import (
 	"github.com/awslabs/goformation/v7/cloudformation"
 	"github.com/awslabs/goformation/v7/cloudformation/ec2"
+	"github.com/econominhas/infra/internal/clouds/providers"
 	"github.com/econominhas/infra/internal/utils"
 )
 
-type Deps struct {
-	StackId   string
-	Resources cloudformation.Resources
-}
-
-type CreateMainVpcInput struct {
-	Name string
+type Vpc struct {
+	StackId string
 }
 
 const (
@@ -24,7 +20,7 @@ const (
 	privateEnum = "private"
 )
 
-func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
+func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVpcInput) {
 	// Vpc
 
 	cidrBlock := "10.10.0.0/16"
@@ -34,7 +30,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 		Name: i.Name,
 		Type: "vpc",
 	})
-	dps.Resources[vpcId] = &ec2.VPC{
+	t.Resources[vpcId] = &ec2.VPC{
 		CidrBlock:          &cidrBlock,
 		EnableDnsSupport:   &enableDns,
 		EnableDnsHostnames: &enableDns,
@@ -45,7 +41,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 
 	createSubnets(CreateSubnetInput{
 		StackId:    dps.StackId,
-		Resources:  dps.Resources,
+		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: publicEnum,
 		VpcId:      vpcId,
@@ -55,7 +51,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 
 	createSubnets(CreateSubnetInput{
 		StackId:    dps.StackId,
-		Resources:  dps.Resources,
+		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: privateEnum,
 		VpcId:      vpcId,
@@ -68,7 +64,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 		Name: i.Name,
 		Type: "ig",
 	})
-	dps.Resources[igId] = &ec2.InternetGateway{}
+	t.Resources[igId] = &ec2.InternetGateway{}
 	igRef := cloudformation.Ref(igId)
 
 	igaId := utils.GenId(&utils.GenIdInput{
@@ -76,7 +72,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 		Name: i.Name,
 		Type: "iga",
 	})
-	dps.Resources[igaId] = &ec2.VPCGatewayAttachment{
+	t.Resources[igaId] = &ec2.VPCGatewayAttachment{
 		InternetGatewayId: &igRef,
 		VpcId:             vpcRef,
 	}
@@ -85,7 +81,7 @@ func (dps *Deps) CreateMain(i *CreateMainVpcInput) {
 
 	createPublicRouteTable(CreatePublicRouteTableInput{
 		StackId:   dps.StackId,
-		Resources: dps.Resources,
+		Resources: t.Resources,
 		Name:      i.Name,
 		VpcId:     vpcId,
 	})

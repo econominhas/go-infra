@@ -4,8 +4,7 @@ import (
 	"github.com/awslabs/goformation/v7/cloudformation"
 
 	"github.com/econominhas/infra/internal/clouds/aws"
-	"github.com/econominhas/infra/internal/clouds/aws/dns"
-	"github.com/econominhas/infra/internal/clouds/aws/vpc"
+	"github.com/econominhas/infra/internal/clouds/providers"
 )
 
 func Global() ([]byte, error) {
@@ -13,18 +12,22 @@ func Global() ([]byte, error) {
 
 	template := cloudformation.NewTemplate()
 
-	cloud := aws.NewAws(stackId, template.Resources)
+	cloud := aws.NewAws(stackId)
 
 	// Dns
 
-	cloud.Dns.CreateMain(&dns.CreateMainDnsInput{
+	dns := cloud.Dns()
+
+	dns.CreateMain(template, &providers.CreateMainDnsInput{
 		Name:       stackId,
 		DomainName: "econominhas.com.br",
 	})
 
 	// Vpc
 
-	cloud.Vpc.CreateMain(&vpc.CreateMainVpcInput{
+	vpc := cloud.Vpc()
+
+	vpc.CreateMain(template, &providers.CreateMainVpcInput{
 		Name: stackId,
 	})
 

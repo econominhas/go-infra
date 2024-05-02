@@ -1,25 +1,30 @@
 package aws
 
 import (
-	"github.com/awslabs/goformation/v7/cloudformation"
+	"github.com/econominhas/infra/internal/clouds"
 	"github.com/econominhas/infra/internal/clouds/aws/dns"
 	"github.com/econominhas/infra/internal/clouds/aws/vpc"
+	"github.com/econominhas/infra/internal/clouds/providers"
 )
 
-type AwsStack struct {
-	Dns dns.Deps
-	Vpc vpc.Deps
+type Aws struct {
+	StackId string
 }
 
-func NewAws(stackId string, resources cloudformation.Resources) *AwsStack {
-	return &AwsStack{
-		Dns: dns.Deps{
-			StackId:   stackId,
-			Resources: resources,
-		},
-		Vpc: vpc.Deps{
-			StackId:   stackId,
-			Resources: resources,
-		},
+func (aws *Aws) Vpc() providers.Vpc {
+	return &vpc.Vpc{
+		StackId: aws.StackId,
+	}
+}
+
+func (aws *Aws) Dns() providers.Dns {
+	return &dns.Dns{
+		StackId: aws.StackId,
+	}
+}
+
+func NewAws(stackId string) clouds.Cloud {
+	return &Aws{
+		StackId: stackId,
 	}
 }

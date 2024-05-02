@@ -7,20 +7,15 @@ import (
 	"github.com/awslabs/goformation/v7/cloudformation"
 	"github.com/awslabs/goformation/v7/cloudformation/certificatemanager"
 	"github.com/awslabs/goformation/v7/cloudformation/route53"
+	"github.com/econominhas/infra/internal/clouds/providers"
 	"github.com/econominhas/infra/internal/utils"
 )
 
-type Deps struct {
-	StackId   string
-	Resources cloudformation.Resources
+type Dns struct {
+	StackId string
 }
 
-type CreateMainDnsInput struct {
-	Name       string
-	DomainName string
-}
-
-func (dps *Deps) CreateMain(i *CreateMainDnsInput) {
+func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDnsInput) {
 	// Hosted Zone
 
 	dnsId := utils.GenId(&utils.GenIdInput{
@@ -29,7 +24,7 @@ func (dps *Deps) CreateMain(i *CreateMainDnsInput) {
 		Type:      "dns",
 		OmitStage: true, // Dns should never have stage
 	})
-	dps.Resources[dnsId] = &route53.HostedZone{
+	t.Resources[dnsId] = &route53.HostedZone{
 		Name: &i.DomainName,
 	}
 
@@ -44,7 +39,7 @@ func (dps *Deps) CreateMain(i *CreateMainDnsInput) {
 		Type:      "cert",
 		OmitStage: true, // Dns should never have stage
 	})
-	dps.Resources[certId] = &certificatemanager.Certificate{
+	t.Resources[certId] = &certificatemanager.Certificate{
 		DomainName:              i.DomainName,
 		ValidationMethod:        &valMethod,
 		SubjectAlternativeNames: []string{"*." + i.DomainName},
