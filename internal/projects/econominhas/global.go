@@ -41,11 +41,20 @@ func Global() ([]byte, error) {
 
 	// Vpc
 
-	vpc := cloud.Vpc()
+	// vpc := cloud.Vpc()
 
-	vpc.CreateMain(template, &providers.CreateMainVpcInput{
-		Name: stackId,
-	})
+	// vpcOutput := vpc.CreateMain(template, &providers.CreateMainVpcInput{
+	// 	Name: stackId,
+	// })
+
+	// Sql
+
+	// sqlDb := cloud.SqlDb()
+
+	// sqlDb.CreateMain(template, &providers.CreateMainSqlDbInput{
+	// 	Name:      stackId,
+	// 	SubnetIds: vpcOutput.PrivateSubnetsIds,
+	// })
 
 	return template.YAML()
 }

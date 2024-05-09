@@ -1,7 +1,8 @@
-// References
-// https://www.infoq.com/articles/aws-vpc-cloudformation/
-// https://blog.devops.dev/how-to-use-aws-cloudformation-to-create-a-vpc-10dbd70a3677
-
+/*
+References
+- https://www.infoq.com/articles/aws-vpc-cloudformation/
+- https://blog.devops.dev/how-to-use-aws-cloudformation-to-create-a-vpc-10dbd70a3677
+*/
 package vpc
 
 import (
@@ -20,7 +21,7 @@ const (
 	privateEnum = "private"
 )
 
-func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVpcInput) {
+func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVpcInput) *providers.CreateMainVpcOutput {
 	// Vpc
 
 	cidrBlock := "10.10.0.0/16"
@@ -30,31 +31,31 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 		Name: i.Name,
 		Type: "vpc",
 	})
-	t.Resources[vpcId] = &ec2.VPC{
+	t.Resources[vpcId.Id] = &ec2.VPC{
 		CidrBlock:          &cidrBlock,
 		EnableDnsSupport:   &enableDns,
 		EnableDnsHostnames: &enableDns,
 	}
-	vpcRef := cloudformation.Ref(vpcId)
+	vpcRef := cloudformation.Ref(vpcId.Id)
 
 	// Public Subnets
 
-	createSubnets(CreateSubnetInput{
+	publicSubnetIds := createSubnets(CreateSubnetInput{
 		StackId:    dps.StackId,
 		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: publicEnum,
-		VpcId:      vpcId,
+		VpcId:      vpcId.Id,
 	})
 
 	// Private Subnets
 
-	createSubnets(CreateSubnetInput{
+	privateSubnetIds := createSubnets(CreateSubnetInput{
 		StackId:    dps.StackId,
 		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: privateEnum,
-		VpcId:      vpcId,
+		VpcId:      vpcId.Id,
 	})
 
 	// Internet Gateway
@@ -64,15 +65,15 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 		Name: i.Name,
 		Type: "ig",
 	})
-	t.Resources[igId] = &ec2.InternetGateway{}
-	igRef := cloudformation.Ref(igId)
+	t.Resources[igId.Id] = &ec2.InternetGateway{}
+	igRef := cloudformation.Ref(igId.Id)
 
 	igaId := utils.GenId(&utils.GenIdInput{
 		Id:   dps.StackId,
 		Name: i.Name,
 		Type: "iga",
 	})
-	t.Resources[igaId] = &ec2.VPCGatewayAttachment{
+	t.Resources[igaId.Id] = &ec2.VPCGatewayAttachment{
 		InternetGatewayId: &igRef,
 		VpcId:             vpcRef,
 	}
@@ -83,6 +84,13 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 		StackId:   dps.StackId,
 		Resources: t.Resources,
 		Name:      i.Name,
-		VpcId:     vpcId,
+		VpcId:     vpcId.Id,
 	})
+
+	// Return
+
+	return &providers.CreateMainVpcOutput{
+		PublicSubnetsIds:  publicSubnetIds,
+		PrivateSubnetsIds: privateSubnetIds,
+	}
 }

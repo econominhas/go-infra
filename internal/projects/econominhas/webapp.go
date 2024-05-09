@@ -8,7 +8,8 @@ import (
 )
 
 func Webapp() ([]byte, error) {
-	stackId := "webapp"
+	stackId := PROJECT_ID
+	name := "webapp"
 
 	template := cloudformation.NewTemplate()
 
@@ -25,8 +26,9 @@ func Webapp() ([]byte, error) {
 	website := cloud.Website()
 
 	website.CreateStatic(template, &providers.CreateStaticWebsiteInput{
-		Name:   stackId,
-		DnsRef: globalDnsRef,
+		Name:       name,
+		DnsRef:     globalDnsRef,
+		FullDomain: "app.econominhas.com.br",
 	})
 
 	return template.YAML()

@@ -1,6 +1,7 @@
-// References
-// https://xebia.com/blog/automated-provisioning-of-acm-certificates-using-route53-in-cloudformation/
-
+/*
+References
+- https://xebia.com/blog/automated-provisioning-of-acm-certificates-using-route53-in-cloudformation/
+*/
 package dns
 
 import (
@@ -15,7 +16,7 @@ type Dns struct {
 	StackId string
 }
 
-func (dps *Dns) getMainId() string {
+func (dps *Dns) getMainId() *utils.GenIdOutput {
 	return utils.GenId(&utils.GenIdInput{
 		Id:        dps.StackId,
 		Name:      dps.StackId,
@@ -26,28 +27,28 @@ func (dps *Dns) getMainId() string {
 
 func (dps *Dns) GetMainRef() string {
 	dnsId := dps.getMainId()
-	return cloudformation.ImportValue(dnsId)
+	return cloudformation.ImportValue(dnsId.Name)
 }
 
 func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDnsInput) {
 	// Hosted Zone
 
 	dnsId := dps.getMainId()
-	t.Resources[dnsId] = &route53.HostedZone{
+	t.Resources[dnsId.Id] = &route53.HostedZone{
 		Name: &i.DomainName,
 	}
 
-	t.Outputs[dnsId+"Output"] = cloudformation.Output{
-		Value: cloudformation.Ref(dnsId),
+	t.Outputs[dnsId.Id+"Output"] = cloudformation.Output{
+		Value: cloudformation.Ref(dnsId.Id),
 		Export: &cloudformation.Export{
-			Name: dnsId,
+			Name: dnsId.Name,
 		},
 	}
 
 	// Certificate
 
 	valMethod := "DNS"
-	dnsRef := cloudformation.Ref(dnsId)
+	dnsRef := cloudformation.Ref(dnsId.Id)
 
 	certId := utils.GenId(&utils.GenIdInput{
 		Id:        dps.StackId,
@@ -55,7 +56,7 @@ func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDn
 		Type:      "cert",
 		OmitStage: true, // Dns should never have stage
 	})
-	t.Resources[certId] = &certificatemanager.Certificate{
+	t.Resources[certId.Id] = &certificatemanager.Certificate{
 		DomainName:              i.DomainName,
 		ValidationMethod:        &valMethod,
 		SubjectAlternativeNames: []string{"*." + i.DomainName},
@@ -64,6 +65,9 @@ func (dps *Dns) CreateMain(t *cloudformation.Template, i *providers.CreateMainDn
 				DomainName:   i.DomainName,
 				HostedZoneId: &dnsRef,
 			},
+		},
+		AWSCloudFormationDependsOn: []string{
+			dnsId.Id,
 		},
 	}
 }

@@ -16,6 +16,8 @@ type CreateSubnetInput struct {
 	Resources  cloudformation.Resources
 }
 
+const AMOUNT_OF_SUBNETS int = 2
+
 func getIdx(subnetType string, idx int) int {
 	if subnetType == privateEnum {
 		return idx + 10
@@ -24,8 +26,10 @@ func getIdx(subnetType string, idx int) int {
 	return idx
 }
 
-func createSubnets(i CreateSubnetInput) {
-	for idx := 0; idx <= 1; idx++ {
+func createSubnets(i CreateSubnetInput) []string {
+	ids := make([]string, AMOUNT_OF_SUBNETS)
+
+	for idx := 0; idx < AMOUNT_OF_SUBNETS; idx++ {
 		trueIdx := getIdx(i.SubnetType, idx)
 		nbr := strconv.Itoa(trueIdx)
 
@@ -36,10 +40,14 @@ func createSubnets(i CreateSubnetInput) {
 			Name: i.Name + nbr,
 			Type: i.SubnetType + "sbn",
 		})
-		i.Resources[subnetId] = &ec2.Subnet{
+		i.Resources[subnetId.Id] = &ec2.Subnet{
 			AvailabilityZone: &azs,
 			CidrBlock:        &cidrBlock,
 			VpcId:            i.VpcId,
 		}
+
+		ids = append(ids, cloudformation.Ref(subnetId.Id))
 	}
+
+	return ids
 }

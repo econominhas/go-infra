@@ -12,14 +12,22 @@ type GenIdInput struct {
 	OmitStage bool
 }
 
-func GenId(i *GenIdInput) string {
+type GenIdOutput struct {
+	Id   string
+	Name string
+}
+
+func GenId(i *GenIdInput) *GenIdOutput {
+	var name string
+
 	if i.OmitStage {
-		return ToPascal(
-			strings.Join([]string{i.Id, i.Name, i.Type}, "-"),
-		)
+		name = strings.Join([]string{i.Id, i.Name, i.Type}, "-")
+	} else {
+		name = strings.Join([]string{i.Id, os.Getenv("ENV"), i.Name, i.Type}, "-")
 	}
 
-	return ToPascal(
-		strings.Join([]string{i.Id, os.Getenv("ENV"), i.Name, i.Type}, "-"),
-	)
+	return &GenIdOutput{
+		Id:   ToPascal(name),
+		Name: name,
+	}
 }

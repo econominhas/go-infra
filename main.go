@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"strings"
 
 	"github.com/econominhas/infra/internal/projects/econominhas"
 	"github.com/manifoldco/promptui"
@@ -18,6 +20,14 @@ func getStack(stackName string) ([]byte, error) {
 	default:
 		return []byte(""), errors.New("stack not found")
 	}
+}
+
+func getFullStackName(project string, env string, product string) string {
+	if product == "global" {
+		return strings.Join([]string{project, product}, "-")
+	}
+
+	return strings.Join([]string{project, env, product}, "-")
 }
 
 func main() {
@@ -67,5 +77,21 @@ func main() {
 		return
 	}
 
-	os.WriteFile("./cloudformation.yaml", stack, 0644)
+	fullStackName := getFullStackName(project, env, product)
+	filePath := "./outputs/" + fullStackName + ".yaml"
+
+	const perm fs.FileMode = 0770
+	os.Mkdir("./outputs", perm)
+	err = os.WriteFile(filePath, stack, perm)
+	if err != nil {
+		fmt.Print(err)
+		panic(1)
+	}
+
+	fmt.Print("Please run the following command:\n")
+	fmt.Printf(
+		"aws cloudformation deploy --template-file %s --stack-name %s\n",
+		filePath,
+		fullStackName,
+	)
 }

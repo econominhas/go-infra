@@ -24,10 +24,10 @@ func createPublicRouteTable(i CreatePublicRouteTableInput) {
 		Name: i.Name,
 		Type: publicEnum + "rt",
 	})
-	i.Resources[rtId] = &ec2.RouteTable{
+	i.Resources[rtId.Id] = &ec2.RouteTable{
 		VpcId: i.VpcId,
 	}
-	rtRef := cloudformation.Ref(rtId)
+	rtRef := cloudformation.Ref(rtId.Id)
 
 	destCidrBlock := "0.0.0.0/0"
 	routeId := utils.GenId(&utils.GenIdInput{
@@ -35,12 +35,12 @@ func createPublicRouteTable(i CreatePublicRouteTableInput) {
 		Name: i.Name,
 		Type: publicEnum + "rt",
 	})
-	i.Resources[routeId] = &ec2.Route{
+	i.Resources[routeId.Id] = &ec2.Route{
 		DestinationCidrBlock: &destCidrBlock,
 		GatewayId:            &i.IgRef,
 		RouteTableId:         rtRef,
 	}
-	routeRef := cloudformation.Ref(routeId)
+	routeRef := cloudformation.Ref(routeId.Id)
 
 	// Route Table Association
 
@@ -50,14 +50,14 @@ func createPublicRouteTable(i CreatePublicRouteTableInput) {
 			Name: i.Name + strconv.Itoa(idx),
 			Type: publicEnum + "sbn",
 		})
-		subnetRef := cloudformation.Ref(subnetId)
+		subnetRef := cloudformation.Ref(subnetId.Id)
 
 		rtSb1Id := utils.GenId(&utils.GenIdInput{
 			Id:   i.StackId,
 			Name: i.Name + "0",
 			Type: "sbnrta",
 		})
-		i.Resources[rtSb1Id] = &ec2.SubnetRouteTableAssociation{
+		i.Resources[rtSb1Id.Id] = &ec2.SubnetRouteTableAssociation{
 			RouteTableId: routeRef,
 			SubnetId:     subnetRef,
 		}
