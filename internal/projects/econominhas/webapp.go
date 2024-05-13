@@ -21,14 +21,23 @@ func Webapp() ([]byte, error) {
 
 	globalDnsRef := globalStack.Dns().GetMainRef()
 
+	// Deploy User
+
+	iam := cloud.Iam()
+
+	deployUser := iam.CreateDeployUser(template, &providers.CreateDeployUserInput{
+		Name: name,
+	})
+
 	// Website
 
 	website := cloud.Website()
 
 	website.CreateStatic(template, &providers.CreateStaticWebsiteInput{
-		Name:       name,
-		DnsRef:     globalDnsRef,
-		FullDomain: "app.econominhas.com.br",
+		Name:          name,
+		DnsRef:        globalDnsRef,
+		DeployUserArn: deployUser.Arn,
+		FullDomain:    "app.econominhas.com.br",
 	})
 
 	return template.YAML()

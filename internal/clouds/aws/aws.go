@@ -4,6 +4,7 @@ import (
 	"github.com/econominhas/infra/internal/clouds"
 	"github.com/econominhas/infra/internal/clouds/aws/api"
 	"github.com/econominhas/infra/internal/clouds/aws/dns"
+	"github.com/econominhas/infra/internal/clouds/aws/iam"
 	sqldb "github.com/econominhas/infra/internal/clouds/aws/sql-db"
 	"github.com/econominhas/infra/internal/clouds/aws/vpc"
 	"github.com/econominhas/infra/internal/clouds/aws/website"
@@ -28,6 +29,12 @@ func (aws *Aws) Dns() providers.Dns {
 
 func (aws *Aws) SqlDb() providers.SqlDb {
 	return &sqldb.SqlDb{
+		StackId: aws.StackId,
+	}
+}
+
+func (aws *Aws) Iam() providers.Iam {
+	return &iam.Iam{
 		StackId: aws.StackId,
 	}
 }

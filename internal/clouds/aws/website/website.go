@@ -2,6 +2,7 @@
 References
 - https://dev.to/tiamatt/aws-project-module-1-host-a-static-website-on-aws-s3-via-cloudformation-2pa2
 - https://dev.to/tiamatt/aws-project-module-3-use-your-custom-domain-for-static-website-on-aws-s3-via-route-53-and-cloudformation-34cn
+- https://stackoverflow.com/questions/40865710/declaring-an-iam-access-key-resource-by-cloudformation#40866799
 */
 package website
 
@@ -17,19 +18,6 @@ import (
 
 type Website struct {
 	StackId string
-}
-
-type Statement struct {
-	Sid       string
-	Effect    string
-	Principal string
-	Action    string
-	Resource  string
-}
-
-type PolicyDocument struct {
-	Version   string
-	Statement []Statement
 }
 
 type Region struct {
@@ -98,14 +86,45 @@ func (dps *Website) CreateStatic(t *cloudformation.Template, i *providers.Create
 	})
 	t.Resources[bucketPId.Id] = &s3.BucketPolicy{
 		Bucket: bucketRef,
-		PolicyDocument: &PolicyDocument{
+		PolicyDocument: &providers.PolicyDocument{
 			Version: "2012-10-17",
-			Statement: []Statement{
+			Statement: []providers.Statement{
 				{
 					Sid:       "PublicReadGetObject",
 					Effect:    "Allow",
 					Principal: "*",
-					Action:    "s3:GetObject",
+					Action:    []string{"s3:GetObject"},
+					Resource: cloudformation.Join("", []string{
+						"arn:aws:s3:::",
+						bucketRef,
+						"/*",
+					}),
+				},
+				{
+					Sid:    "AllowDeployUser",
+					Effect: "Allow",
+					Principal: providers.AwsPrincipal{
+						AWS: i.DeployUserArn,
+					},
+					Action: []string{"s3:ListBucket"},
+					Resource: cloudformation.Join("", []string{
+						"arn:aws:s3:::",
+						bucketRef,
+					}),
+				},
+				{
+					Sid:    "AllowDeployUserPutObject",
+					Effect: "Allow",
+					Principal: providers.AwsPrincipal{
+						AWS: i.DeployUserArn,
+					},
+					Action: []string{
+						"s3:PutObject",
+						"s3:PutObjectAcl",
+						"s3:GetObject",
+						"s3:GetObjectAcl",
+						"s3:DeleteObject",
+					},
 					Resource: cloudformation.Join("", []string{
 						"arn:aws:s3:::",
 						bucketRef,
