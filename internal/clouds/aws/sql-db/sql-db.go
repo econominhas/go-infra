@@ -6,6 +6,7 @@ package sqldb
 
 import (
 	"github.com/awslabs/goformation/v7/cloudformation"
+	"github.com/awslabs/goformation/v7/cloudformation/ec2"
 	"github.com/awslabs/goformation/v7/cloudformation/rds"
 	"github.com/econominhas/infra/internal/clouds/providers"
 	"github.com/econominhas/infra/internal/utils"
@@ -33,6 +34,30 @@ func (dps *SqlDb) CreateMain(t *cloudformation.Template, i *providers.CreateMain
 		DBSubnetGroupName:        &sbngId.Name,
 		DBSubnetGroupDescription: dbId.Name + " subnet group",
 		SubnetIds:                i.SubnetIds,
+	}
+
+	// Security Group
+
+	// Creates a security group that only allows
+	// inbound traffic from the SecurityGroupRef
+	// and doesn't allow any outbound traffic
+
+	dbPort := 5432
+	sgId := utils.GenId(&utils.GenIdInput{
+		Id:   dps.StackId,
+		Name: i.Name,
+		Type: "sg",
+	})
+	t.Resources[sgId.Id] = &ec2.SecurityGroup{
+		GroupName: &sgId.Name,
+		SecurityGroupIngress: []ec2.SecurityGroup_Ingress{
+			{
+				IpProtocol:              "tcp",
+				FromPort:                &dbPort,
+				ToPort:                  &dbPort,
+				SourceSecurityGroupName: &i.Ec2SgRef,
+			},
+		},
 	}
 
 	// Database
@@ -73,8 +98,9 @@ func (dps *SqlDb) CreateMain(t *cloudformation.Template, i *providers.CreateMain
 		PubliclyAccessible:       &publiclyAccessible,
 		StorageEncrypted:         &storageEncrypted,
 		StorageType:              &storageType,
+		DBSubnetGroupName:        &sbngId.Name,
 		DBSecurityGroups: []string{
-			cloudformation.Ref(sbngId.Id),
+			cloudformation.Ref(sgId.Id),
 		},
 	}
 }

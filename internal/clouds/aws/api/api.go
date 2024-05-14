@@ -19,4 +19,5 @@ type Api struct {
 	StackId string
 }
 
-func (dps *Api) CreateBasic(t *cloudformation.Template, i *providers.CreateBasicApiInput) {}
+func (dps *Api) CreateBasic(t *cloudformation.Template, i *providers.CreateBasicApiInput) {
+}

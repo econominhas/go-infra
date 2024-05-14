@@ -9,6 +9,7 @@ type CreateMainVpcInput struct {
 type CreateMainVpcOutput struct {
 	PublicSubnetsIds  []string
 	PrivateSubnetsIds []string
+	Ec2SgRef          string
 }
 
 type Vpc interface {

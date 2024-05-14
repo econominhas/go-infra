@@ -40,8 +40,7 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 
 	// Public Subnets
 
-	publicSubnetIds := createSubnets(CreateSubnetInput{
-		StackId:    dps.StackId,
+	publicSubnetIds := dps.createSubnets(&createSubnetInput{
 		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: publicEnum,
@@ -50,8 +49,7 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 
 	// Private Subnets
 
-	privateSubnetIds := createSubnets(CreateSubnetInput{
-		StackId:    dps.StackId,
+	privateSubnetIds := dps.createSubnets(&createSubnetInput{
 		Resources:  t.Resources,
 		Name:       i.Name,
 		SubnetType: privateEnum,
@@ -80,11 +78,18 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 
 	// Public Route Table
 
-	createPublicRouteTable(CreatePublicRouteTableInput{
-		StackId:   dps.StackId,
+	dps.createPublicRouteTable(&createPublicRouteTableInput{
 		Resources: t.Resources,
 		Name:      i.Name,
 		VpcId:     vpcId.Id,
+	})
+
+	// Ec2 Security Group
+
+	ec2SgRef := dps.createEc2SecurityGroup(&createEc2SecurityGroupInput{
+		Name:     i.Name,
+		VpcId:    vpcId.Id,
+		Template: t,
 	})
 
 	// Return
@@ -92,5 +97,6 @@ func (dps *Vpc) CreateMain(t *cloudformation.Template, i *providers.CreateMainVp
 	return &providers.CreateMainVpcOutput{
 		PublicSubnetsIds:  publicSubnetIds,
 		PrivateSubnetsIds: privateSubnetIds,
+		Ec2SgRef:          ec2SgRef,
 	}
 }

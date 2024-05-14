@@ -8,8 +8,7 @@ import (
 	"github.com/econominhas/infra/internal/utils"
 )
 
-type CreateSubnetInput struct {
-	StackId    string
+type createSubnetInput struct {
 	Name       string
 	SubnetType string
 	VpcId      string
@@ -26,7 +25,7 @@ func getIdx(subnetType string, idx int) int {
 	return idx
 }
 
-func createSubnets(i CreateSubnetInput) []string {
+func (dps *Vpc) createSubnets(i *createSubnetInput) []string {
 	ids := make([]string, AMOUNT_OF_SUBNETS)
 
 	for idx := 0; idx < AMOUNT_OF_SUBNETS; idx++ {
@@ -36,7 +35,7 @@ func createSubnets(i CreateSubnetInput) []string {
 		azs := cloudformation.Select(trueIdx, []string{cloudformation.GetAZs("")})
 		cidrBlock := "10.10." + nbr + ".0/24"
 		subnetId := utils.GenId(&utils.GenIdInput{
-			Id:   i.StackId,
+			Id:   dps.StackId,
 			Name: i.Name + nbr,
 			Type: i.SubnetType + "sbn",
 		})

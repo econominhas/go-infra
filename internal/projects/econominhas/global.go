@@ -54,6 +54,7 @@ func Global() ([]byte, error) {
 	// sqlDb.CreateMain(template, &providers.CreateMainSqlDbInput{
 	// 	Name:      stackId,
 	// 	SubnetIds: vpcOutput.PrivateSubnetsIds,
+	// 	Ec2SgRef:  vpcOutput.Ec2SgRef,
 	// })
 
 	return template.YAML()
